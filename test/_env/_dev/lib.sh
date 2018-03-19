@@ -1,0 +1,4 @@
+MODULE_ROOT=`pwd`/../../../
+SOURCE_FILE=$MODULE_ROOT/src/index.js
+TEST_ENV_ROOT=$MODULE_ROOT/test
+sudo ln -s SOURCE_FILE TEST_ENV_ROOT

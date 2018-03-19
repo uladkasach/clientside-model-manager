@@ -1,0 +1,32 @@
+{
+  "name": "clientside-model-manager",
+  "version": "1.0.0",
+  "description": "simplifies the retreival and caching of database state using models",
+  "main": "src/index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/uladkasach/clientside-model-manager.git"
+  },
+  "keywords": [
+    "clientside"
+  ],
+  "author": "uladkasach",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/uladkasach/clientside-model-manager/issues"
+  },
+  "homepage": "https://github.com/uladkasach/clientside-model-manager#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "clientside-require": "^3.9.4",
+    "jsdom": "^11.6.2",
+    "mocha": "^5.0.4",
+    "xmlhttprequest": "^1.8.0"
+  }
+}
