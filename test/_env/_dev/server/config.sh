@@ -1,4 +1,4 @@
-MODULE_NAME=clientside-model-manager;
+MODULE_NAME=test-env-clientside-model-manager;
 
 ## create the .conf file and place it into the directory apache will search for
 sudo rm /etc/apache2/sites-enabled/$MODULE_NAME.conf
