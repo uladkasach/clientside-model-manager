@@ -1,22 +1,5 @@
-/*
-var models = await require("path/to/models")
-models.Backtest.find_all({
-    where : {
-        Parent : parent.type,
-        ParentId : parent.id,
-    }
-})
-*/
+var Data_Cache = require("./cache.js");
 
-/*
-var active_models = {
-    "Plan" : "/_models/plan.js",
-    "Funding" : "/_models/funding.js",
-    "Backtest" : {path:"/_models/backtest.js", preload:true}
-}
-var models = new Model_Manager(active_models)
-module.exports = models;
-*/
 
 /*
     note, we define all methods with __ prepended so that model names do not conflict with internal method names
@@ -27,11 +10,14 @@ var Model_Manager = function(requested_models){
     var [models, error] = this.__normalize_and_validate_models(requested_models);
     if(models == null) throw error; // if models not returned, throw error
 
+    // define cache
+    this.__data_cache = new Data_Cache();
+
     // append models to model manager object
     this.__append_models(models);
 
     // handle preloads
-    this.__handle_preloads(models);
+    // this.__handle_preloads(models); // TODO
 }
 
 Model_Manager.prototype = {
@@ -49,24 +35,70 @@ Model_Manager.prototype = {
                         - update // TODO
     */
     __append_models : function(models){
+        // start the model_cache
+        this.__model_cache = models;
+
         // append each model as a getter
         var keys = Object.keys(models);
         var values = Object.values(models);
         for(var i = 0; i < keys.length; i++){
             let model_name = keys[i];
             let options = values[i];
+            Object.defineProperty(this, model_name, { get: function() { return this.__retreive_wrapped_model_promise(model_name)} });
         }
     },
-    __wrap_model : function(model){
-        /*
 
+    /*
+        retreiving and wrapping models
+    */
+    __retreive_wrapped_model_promise : function(model_name){
+        // build and cache promise if not already set
+        if(typeof this.__model_cache[model_name].path == "string"){ // if .path is defined in the model_cache for this model, then it has not started loading yet
+            var model_options = this.__model_cache[model_name]; // if we are calling cache_promise_to_load_model, then model_cache contains model_options still
+            var wrapped_promise_to_load = this.__generate_wrapped_promise_to_load_model(model_options);
+            this.__model_cache[model_name] = wrapped_promise_to_load;
+        }
+        // return cached promise
+        return this.__model_cache[model_name];
+    },
+    __generate_wrapped_promise_to_load_model : function(options){
+        console.log(model);
+    },
+    __load_and_wrap_module : async function(model_name, options, use_cache){
+        /*
+            retreiving the model
         */
+        var model = await clientside_require.asynchronous_require(options.path); // retreive the model
+
+        /*
+            return the unmodified model if cacheing is not requested
+        */
+        if(use_cache !== true) return model;
+
+        /*
+            wrap the following methods (if they are defined) to support caching:
+                - find
+                - findAll
+        */
+        if(typeof model.find != "undefined"){ // wrap find if it exists
+            var original_find = model.find.bind(model);
+            var new_find = async function(parameters){
+                var data = await Promise.resolve(original_find(parameters)); // wrap in promise to ensure its async even if orig was not
+                this.__data_cache.set(model_name, parameters, data);
+                return this.__data_cache.get(model_name, parameters);
+            }
+            model.find = new_find.bind(this);
+        }
+
+        // wrap findAll = find_all - TODO
     },
 
     /*
         normalization and validation
     */
     __normalize_and_validate_models : function(models){
+        if(typeof models == "undefined") models = {}; // default to empty models object
+
         var normalized_models = {};
 
         var keys = Object.keys(models);

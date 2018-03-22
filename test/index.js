@@ -8,6 +8,7 @@ global.window = new jsdom.JSDOM(``,{
     resources: "usable", // load iframes and other resources
     runScripts : "dangerously", // enable loading of scripts - dangerously is fine since we are running code we wrote.
 }).window;
+window.XMLHttpRequest = xmlhttprequest.XMLHttpRequest; // remove cross origin concerns
 
 /*
     define dependencies
@@ -18,16 +19,16 @@ var assert = require("assert");
 
 describe('syntax', function(){
     it("should load class", async function(){
-        var Model_Manager = await clientside_require.asynchronous_require(class_path);
+        var Model_Manager = await clientside_require.asynchronous_require(class_path, {require:"sync"});
         assert.equal(typeof Model_Manager, "function", "Model_Manager should be an function");
     })
 })
 describe('validation', function(){
     require("./validation/options")
 })
-describe('wrap', function(){})
-describe('read', function(){})
-describe('cache', function(){
-    it("should cache the data")
-    it("should be able to update cache")
+describe('wrap', function(){
+    require("./wrap/model")
+    require("./wrap/promise")
 })
+describe('read', function(){})
+require("./cache/")
