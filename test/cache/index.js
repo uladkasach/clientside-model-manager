@@ -43,4 +43,5 @@ describe('cache', function(){
         var cached_data = model_manager.__data_cache.get("Test");
         assert.equal(JSON.stringify(data), JSON.stringify(data));
     })
+    it("should delete elements that dont re-appear for same parameters")
 })

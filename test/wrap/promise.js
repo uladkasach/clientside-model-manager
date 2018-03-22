@@ -40,4 +40,5 @@ describe('promise', function(){
             assert.equal(error.message.indexOf("Test.findAll"), 0, "error message should start with an expected string")
         }
     })
+    it("should find that `sync` method is appended when caching is requested")
 })

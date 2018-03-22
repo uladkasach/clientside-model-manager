@@ -5,7 +5,7 @@ var Data_Cache = require("./cache.js");
     note, we define all methods with __ prepended so that model names do not conflict with internal method names
 */
 
-var Model_Manager = function(requested_models){
+var Model_Manager = function(requested_models, use_cache){
     // noramlize and conduct basic validatation of models
     var [models, error] = this.__normalize_and_validate_models(requested_models);
     if(models == null) throw error; // if models not returned, throw error
@@ -14,7 +14,7 @@ var Model_Manager = function(requested_models){
     this.__data_cache = new Data_Cache();
 
     // append models to model manager object
-    this.__append_models(models);
+    this.__append_models(models, use_cache);
 
     // handle preloads
     // this.__handle_preloads(models); // TODO
@@ -40,7 +40,7 @@ Model_Manager.prototype = {
                 - now that a promise_to_load is defined, we return the promise of the wrapped model object
                     - the promise immediately includes the wrapped methods the model manager supports: this.__methods
     */
-    __append_models : function(models){
+    __append_models : function(models, use_cache){
         // start the model_cache
         this.__model_cache = models;
 
@@ -50,18 +50,18 @@ Model_Manager.prototype = {
         for(var i = 0; i < keys.length; i++){
             let model_name = keys[i];
             let options = values[i];
-            Object.defineProperty(this, model_name, { get: function() { return this.__retreive_wrapped_model_promise(model_name)} });
+            Object.defineProperty(this, model_name, { get: function() { return this.__retreive_wrapped_model_promise(model_name, use_cache)} });
         }
     },
 
     /*
         retreiving and wrapping models
     */
-    __retreive_wrapped_model_promise : function(model_name){
+    __retreive_wrapped_model_promise : function(model_name, use_cache){
         // build and cache promise if not already set
         if(typeof this.__model_cache[model_name].path == "string"){ // if .path is defined in the model_cache for this model, then it has not started loading yet
             var model_options = this.__model_cache[model_name]; // if we are calling cache_promise_to_load_model, then model_cache contains model_options still
-            var wrapped_promise_to_load = this.__generate_wrapped_promise_to_load_model(model_name, model_options);
+            var wrapped_promise_to_load = this.__generate_wrapped_promise_to_load_model(model_name, model_options, use_cache);
             this.__model_cache[model_name] = wrapped_promise_to_load;
         }
         // return cached promise
@@ -85,6 +85,24 @@ Model_Manager.prototype = {
                 return model[method](parameters);
             }
         })
+
+        /*
+            append the "sync" method if caching is enabled
+                - runs either a default availible method or the method selected with force_request = true
+                - NOTE: the methods themselfs, if they were wrapped, can be used with force_request directly
+        */
+        if(use_cache) promise_module["sync"] = async function(parameters, method){ // run the method with the parameters to cache it with force_request = true
+            var model = await this; // wait for promise to resolve; `this` is the promise
+            if(typeof method == "undefined"){ // try and find a default
+                if(typeof model.find == "function") var default_method = model.find.bind(model);
+                if(typeof model.findAll == "function") var default_method = model.findAll.bind(model);
+                if(typeof model.find_all == "function") var default_method = model.find_all.bind(model);
+                if(typeof default_method == "undefined") throw new Error("method is not defined and no defaults can be found");
+                await default_method(parameters, true); // use the default
+            } else { // else if its defined, just use the defined one
+                await model[method](parameters, true);
+            }
+        };
 
         // return the data
         return promise_module;
@@ -114,10 +132,19 @@ Model_Manager.prototype = {
         wrapping helpers
     */
     __wrap_a_read_method : function(model_name, original_method){
-        var new_find = async function(parameters){
-            var data = await Promise.resolve(original_method(parameters)); // wrap in promise to ensure its async even if orig was not
-            this.__data_cache.set(model_name, parameters, data);
-            return this.__data_cache.get(model_name, parameters);
+        var new_find = async function(parameters, force_request){
+            // attempt to get the data first
+            var data = this.__data_cache.get(model_name, parameters);
+
+            // if data is null, or we have a forced_request (syncing), then promise to retreive the data from the model
+            if(data == null || force_request === true){
+                var data = await Promise.resolve(original_method(parameters)); // wrap in promise to ensure its async even if orig was not
+                this.__data_cache.set(model_name, parameters, data);
+                var data = this.__data_cache.get(model_name, parameters); // grab data from cache again to ensure consistency
+            }
+
+            // return the data
+            return data;
         }
         return new_find.bind(this);
     },

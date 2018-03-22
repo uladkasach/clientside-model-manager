@@ -26,9 +26,12 @@ describe('syntax', function(){
 describe('validation', function(){
     require("./validation/options")
 })
+require("./cache/")
 describe('wrap', function(){
     require("./wrap/model")
     require("./wrap/promise")
+    require("./wrap/full")
 })
-describe('read', function(){})
-require("./cache/")
+describe('usage', function(){
+    require("./usage/basic")
+})
