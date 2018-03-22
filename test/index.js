@@ -10,14 +10,7 @@ global.window = new jsdom.JSDOM(``,{
 }).window;
 
 /*
-    append clientside require settings
-*/
-if(typeof window.require_global == "undefined") window.require_global = {};
-window.require_global.model_root = "/models"; // define root for models for the data_manager
-
-
-/*
-    define globals
+    define dependencies
 */
 var class_path = "file:///var/www/git/More/clientside-model-manager/src/class.js";
 var clientside_require = require("clientside-require");
@@ -25,15 +18,15 @@ var assert = require("assert");
 
 describe('syntax', function(){
     it("should load class", async function(){
-        var model_manager = await clientside_require.asynchronous_require(class_path);
-        assert.equal(typeof model_manager, "object", "model_manager should be an object");
+        var Model_Manager = await clientside_require.asynchronous_require(class_path);
+        assert.equal(typeof Model_Manager, "function", "Model_Manager should be an function");
     })
 })
 describe('validation', function(){
     require("./validation/options")
 })
-describe('wrap')
-describe('read')
+describe('wrap', function(){})
+describe('read', function(){})
 describe('cache', function(){
     it("should cache the data")
     it("should be able to update cache")

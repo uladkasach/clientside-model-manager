@@ -84,9 +84,9 @@ Model_Manager.prototype = {
             /*
                 validate
             */
-            if(typeof options !== "object") return new Error("options for `"+model_+name+"` must be an object.");
-            if(typeof options.path != "string") return new Error("options.path for `"+model_name+"` must be a string.");
-            if(typeof options.preload != "boolean") return new Error("options.preload for `"+model_name+"` must be a boolean.");
+            if(typeof options !== "object") var error = new Error("options for `"+model_+name+"` must be an object.");
+            if(typeof options.path != "string") var error = new Error("options.path for `"+model_name+"` must be a string.");
+            if(typeof options.preload != "boolean") var error = new Error("options.preload for `"+model_name+"` must be a boolean.");
 
             /*
                 append to data
@@ -94,7 +94,8 @@ Model_Manager.prototype = {
             normalized_models[model_name] = options;
         }
 
-        return normalized_models;
+        if(typeof error !== "undefined") normalized_models = null; // clear modules if error is defined
+        return [normalized_models, error];
     },
     /*
     validate_model_file : await function(model_path){
@@ -109,3 +110,6 @@ Model_Manager.prototype = {
     },
     */
 }
+
+
+module.exports = Model_Manager;
