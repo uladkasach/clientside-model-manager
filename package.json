@@ -1,7 +1,7 @@
 {
   "name": "clientside-model-manager",
   "version": "1.0.0",
-  "description": "simplifies the retreival and caching of database state using models",
+  "description": "sequelize and mongoose style object-modeling database-interface for the browser",
   "main": "src/index.js",
   "directories": {
     "test": "test"
@@ -24,9 +24,10 @@
   "homepage": "https://github.com/uladkasach/clientside-model-manager#readme",
   "dependencies": {},
   "devDependencies": {
-    "clientside-require": "^3.9.8",
+    "clientside-require": "^3.10.2",
     "jsdom": "^11.6.2",
     "mocha": "^5.0.4",
     "xmlhttprequest": "^1.8.0"
-  }
+  },
+  "require_mode": "async"
 }

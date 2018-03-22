@@ -40,6 +40,8 @@
                       }
         - when database_pull retreives objects already in cache, overwrite if object.update_time is newer
         - when retreiving from cache, retreive all that are associated with query
+
+    Usage Example:
 */
 
 
@@ -49,14 +51,67 @@ var Model_Manager = function(model_root){
 }
 
 Model_Manager.prototype = {
+    /*
+    var backtests = await model_manager.promise_to_retreive({ model: "backtest", where : {
+        Parent : parent.type,
+        ParentId : parent.id,
+    });
+    */
+    find
+
+
+    /*
+        CRUD
+    */
 
     /*
         create
     */
+    create : async function(model_key, properties){
+        // 0. check that model is valid and retreive model
+        var model = this.retreive_model(model_key);
+
+        // 1. check if model defines create function
+        var method_not_defined = (typeof model.prototype.database.create == "undefined");
+        if(method_not_defined) throw new Error("model does not support create function");
+
+        // 2. call on model to create
+        var object = model.create(properties);
+
+        // 3. cache object in manager
+        var parameters = null; // no parameters were defined for retreiving this element
+        this.cache_data(model_key, parameters, [object]);
+    },
 
     /*
         read
     */
+    read : async function(model_key, parameters){
+        // 0. check that model is valid and retreive model
+        var model = this.retreive_model(model_key);
+
+        // 1. check if model defines read function
+        var method_not_defined = (typeof model.prototype.database.read == "undefined");
+        if(method_not_defined) throw new Error("model does not support read function");
+
+        /*
+            2 - retreive data
+        */
+        // 2.1 - see if data is in cache
+        var data = this.cache.retreive_data(model_key, parameters)
+
+        // 2.2 - if data is not in cache, retreive it and cache it
+        if(data == null){
+            // 2.2.1 - retreive the data
+            var data = model.read(parameters);
+
+            // 2.2.2 - cache the data
+            this.cache.add_data(model_key, parameters, data);
+        }
+
+        // 3. return data
+        return data;
+    },
 
     /*
         update
