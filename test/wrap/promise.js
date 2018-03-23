@@ -40,5 +40,10 @@ describe('promise', function(){
             assert.equal(error.message.indexOf("Test.findAll"), 0, "error message should start with an expected string")
         }
     })
-    it("should find that `sync` method is appended when caching is requested")
+    it("should find that `sync` method is appended when caching is requested", async function(){
+        var Model_Manager = await clientside_require.asynchronous_require(class_path, {require:"sync"});
+        var models = new Model_Manager();
+        var model_promise = models.__generate_wrapped_promise_to_load_model("Test", {path : "/models/cachable"}, true);
+        assert.equal(typeof model_promise["sync"], "function")
+    })
 })

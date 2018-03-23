@@ -1,6 +1,5 @@
 var Data_Cache = require("./cache.js");
 
-
 /*
     note, we define all methods with __ prepended so that model names do not conflict with internal method names
 */
@@ -78,11 +77,11 @@ Model_Manager.prototype = {
         */
         var public_methods = [].concat(this.__methods.read, this.__methods.update, this.__methods.create)
         public_methods.forEach((method)=>{
-            promise_module[method] = async function(parameters){
+            promise_module[method] = async function(parameters, force_sync){
                 var model = await this; // wait for promise to resolve; `this` is the promise
                 if(typeof model[method] == "undefined")  throw new Error(model_name + "." + method + " is not defined")
                 if(typeof model[method] != "function") throw new Error(model_name + "." + method + " is not a function")
-                return model[method](parameters);
+                return model[method](parameters, force_sync);
             }
         })
 
@@ -109,7 +108,14 @@ Model_Manager.prototype = {
     },
     __load_and_wrap_module : async function(model_name, options, use_cache){
         //retreiving the model
-        var model = await clientside_require.asynchronous_require(options.path); // retreive the model
+        var source_model = await clientside_require.asynchronous_require(options.path); // retreive the model
+        var model = Object.assign({}, source_model); // make a copy of the object so that we dont modify the source model
+                                                     //     models typically are not large and wont be a problem to duplicate in the memory
+                                                     //     the advantage of doing this is that the user will not get a modified model if they try to access it directly
+                                                     //     && that more than one Module_Manager can wrap the model without stepping on eachothers toes
+                                                     //     NOTE: however, "static" properties and methods of the object that we do not modify will remain passed by reference (found through testing)
+                                                     //         which means that the data acts exactly like you would expect it to were we not wrapping anything
+                                                     //         this is most likely due to the fact that object.assign performs a shallow copy
 
         //return the unmodified model if cacheing is not requested
         if(use_cache !== true) return model;
@@ -120,6 +126,7 @@ Model_Manager.prototype = {
             if(typeof model[method] != "function") return;
             var original_method = model[method].bind(model);
             model[method] = this.__wrap_a_read_method(model_name, original_method);
+            model["__original_"+method] = original_method; // define original method
         })
 
         // TODO - wrap create and update methods to support caching
