@@ -2,7 +2,7 @@
   "name": "clientside-model-manager",
   "version": "1.0.0",
   "description": "sequelize and mongoose style object-modeling database-interface for the browser",
-  "main": "src/index.js",
+  "main": "src/class.js",
   "directories": {
     "test": "test"
   },
