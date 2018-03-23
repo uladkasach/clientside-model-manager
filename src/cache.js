@@ -44,11 +44,21 @@ Data_Cache.prototype = {
 
         // record each data element into objects cache
         data.forEach((object)=>{
-            this.cache[model_name].objects[object.id] = object;
+            this.cache[model_name].objects[object.id] = object; // NOTE : this overwrites data that existed previously (updates)
         })
 
         // record this query, value is the id's of the objects that this query should retreive
         this.cache[model_name].queries[JSON.stringify(parameters)] = data.map((object)=>object.id);
+
+        // NOTE: we do not remove objects from the cache that are not used by any query.
+        //      1. this is an expensive operation (merge all queries id's into one set, call indexOf for each object in cache, make descision)
+        //      2. if they are removoed from query, they will never be returned anyway
+        // SO:
+        //      PROS:
+        //      - data consistency is maintained (user will get the data they expect);
+        //      - saves alot of computation time
+        //      CONS:
+        //      - each deleted object remains in memory untill user reloads page... (no big deal for 99% of use cases)
     },
     get : function(model_name, parameters){
         // check that the cache is defined for this model

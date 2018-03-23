@@ -43,5 +43,14 @@ describe('cache', function(){
         var cached_data = model_manager.__data_cache.get("Test");
         assert.equal(JSON.stringify(data), JSON.stringify(data));
     })
-    it("should delete elements that dont re-appear for same parameters")
+    it("should delete elements that dont re-appear for same parameters", async function(){
+        var Model_Manager = await clientside_require.asynchronous_require(class_path);
+        var model_manager = new Model_Manager(); // no modules passed - but allows cache to be used
+        var data = [{id:1, val:1}, {id:2, val:2}, {id:3, val:3}];
+        model_manager.__data_cache.set("Test", null, data);
+        assert(data.length, 3, "should have 3 elements in data now")
+        model_manager.__data_cache.set("Test", null, [{id:1, val:"updated value"}]);
+        var data = model_manager.__data_cache.get("Test", null);
+        assert(data.length, 1, "should only have 1 element in data now")
+    })
 })
