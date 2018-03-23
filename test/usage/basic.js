@@ -6,18 +6,18 @@ var clientside_require = require("clientside-require");
 var assert = require("assert");
 
 describe('basic', function(){
-    it("should find that data can be retreived from model", async function(){
-        var Model_Manager = await clientside_require.asynchronous_require(class_path, {require:"sync"});
-        var models = new Model_Manager({"CachableTest" : "/models/cachable"});
-        var data = await models.CachableTest.find();
-        assert.equal(JSON.stringify(data), JSON.stringify([{id:2,val:2}]), "data should be expected")
-    })
     it("should not load models untill they are accessed the first time", async function(){
         var Model_Manager = await clientside_require.asynchronous_require(class_path, {require:"sync"});
         var models = new Model_Manager({"CachableTest" : "/models/cachable"});
         assert.equal(typeof models.__model_cache["CachableTest"].path, "string", "model_cache for model should contain options string if not loaded yet")
         models.CachableTest; // access model
         assert.equal(typeof models.__model_cache["CachableTest"].then, "function", "model_cache for model should contain a promise now that its loading")
+    })
+    it("should find that data can be retreived from model", async function(){
+        var Model_Manager = await clientside_require.asynchronous_require(class_path, {require:"sync"});
+        var models = new Model_Manager({"CachableTest" : "/models/cachable"});
+        var data = await models.CachableTest.find();
+        assert.equal(JSON.stringify(data), JSON.stringify([{id:2,val:2}]), "data should be expected")
     })
     it("should find that caching prevents an additional request to be made to model", async function(){ // use a model that tracks each "request"
         var Model_Manager = await clientside_require.asynchronous_require(class_path, {require:"sync"});

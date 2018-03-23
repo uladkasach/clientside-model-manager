@@ -1,4 +1,7 @@
-module.exports = {
+var Model = function(){}
+
+
+Model.prototype = {
     find_all : function(params){
         var some_data =  [{id:1, val:1}, {id:2, val:2}, {id:3, val:3}] ;
         if(typeof params == "undefined"){
@@ -11,3 +14,5 @@ module.exports = {
         return [{id:2, val:2}]
     }
 }
+
+module.exports = Model;

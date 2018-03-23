@@ -109,13 +109,21 @@ Model_Manager.prototype = {
     __load_and_wrap_module : async function(model_name, options, use_cache){
         //retreiving the model
         var source_model = await clientside_require.asynchronous_require(options.path); // retreive the model
-        var model = Object.assign({}, source_model); // make a copy of the object so that we dont modify the source model
-                                                     //     models typically are not large and wont be a problem to duplicate in the memory
-                                                     //     the advantage of doing this is that the user will not get a modified model if they try to access it directly
-                                                     //     && that more than one Module_Manager can wrap the model without stepping on eachothers toes
-                                                     //     NOTE: however, "static" properties and methods of the object that we do not modify will remain passed by reference (found through testing)
-                                                     //         which means that the data acts exactly like you would expect it to were we not wrapping anything
-                                                     //         this is most likely due to the fact that object.assign performs a shallow copy
+
+
+        // make a copy of the object so that we dont modify the source model
+        //     models typically are not large and wont be a problem to duplicate in the memory
+        //     the advantage of doing this is that the user will not get a modified model if they try to access it directly
+        //     && that more than one Module_Manager can wrap the model without stepping on eachothers toes
+        if(typeof source_model == "function"){
+            var model = new source_model(); // create a new instance and modify its prototypes
+        } else {
+            //     NOTE: in this case, "static" properties and methods of the object that we do not modify will remain passed by reference (found through testing)
+            //         which means that the data acts exactly like you would expect it to were we not wrapping anything
+            //         this is most likely due to the fact that object.assign performs a shallow copy
+            var model = Object.assign({}, source_model);
+        }
+
 
         //return the unmodified model if cacheing is not requested
         if(use_cache !== true) return model;
